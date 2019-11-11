@@ -1,0 +1,23 @@
+PODS:
+  - RxSwift (5.0.1)
+  - SoundWave (0.1.5):
+    - RxSwift (~> 5)
+
+DEPENDENCIES:
+  - SoundWave (from `../`)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - RxSwift
+
+EXTERNAL SOURCES:
+  SoundWave:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  RxSwift: e2dc62b366a3adf6a0be44ba9f405efd4c94e0c4
+  SoundWave: a684ad8c9835c7dcb071fb2c3e47408d3cd4e492
+
+PODFILE CHECKSUM: dfc7e67748298c50c5f67204a07ae01031d7c398
+
+COCOAPODS: 1.7.5
