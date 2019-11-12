@@ -7,6 +7,7 @@
 
 import Foundation
 
+public typealias TimerDidCompleteClosure = (() -> ())
 public final class Chronometer: NSObject {
     private var timer: Timer?
     private var timeInterval: TimeInterval = 1.0
@@ -15,7 +16,7 @@ public final class Chronometer: NSObject {
     public var timerCurrentValue: TimeInterval = 0.0
     
     public var timerDidUpdate: ((TimeInterval) -> ())?
-    public var timerDidComplete: (() -> ())?
+    public var timerDidComplete: TimerDidCompleteClosure?
     
     public init(withTimeInterval timeInterval: TimeInterval = 0.0) {
         super.init()

@@ -64,7 +64,12 @@ public class AudioVisualizationView: BaseNibView {
     private let currentTimePublisher = BehaviorSubject<TimeInterval>(value: TimeInterval(floatLiteral: 0))
     public var currectTimeObservable: Observable<TimeInterval> { return currentTimePublisher }
     
-	private var playChronometer: Chronometer? = Chronometer()
+	private var playChronometer: Chronometer?
+    public var timerDidComplete: TimerDidCompleteClosure? {
+        didSet {
+            playChronometer?.timerDidComplete = timerDidComplete
+        }
+    }
 
 	public var meteringLevels: [Float]? {
 		didSet {
@@ -138,6 +143,13 @@ public class AudioVisualizationView: BaseNibView {
 		self.meteringLevelsArray.removeAll()
 		self.setNeedsDisplay()
 	}
+    
+    public func setCurrentGradientPercentage() {
+        guard let duration = self.duration,
+            let timerDuration = self.playChronometer?.timerCurrentValue else { return }
+        self.currentGradientPercentage = Float(timerDuration) / Float(duration)
+        self.setNeedsDisplay()
+    }
 
 	// MARK: - Record Mode Handling
 
@@ -228,6 +240,7 @@ public class AudioVisualizationView: BaseNibView {
 
 		self.playChronometer = Chronometer(withTimeInterval: self.audioVisualizationTimeInterval)
 		self.playChronometer?.start(shouldFire: false)
+        self.playChronometer?.timerDidComplete = self.timerDidComplete
 
 		self.playChronometer?.timerDidUpdate = { [weak self] timerDuration in
 			guard let this = self else {
@@ -387,9 +400,10 @@ public class AudioVisualizationView: BaseNibView {
 		context.restoreGState()
 	}
     
-    public func changeTimer(timeInterval: TimeInterval, percantage: Float? = nil) {
-        playChronometer?.timerCurrentValue = timeInterval
-        currentTimePublisher.onNext(timeInterval)
+    public func changeTimer(timeInterval: TimeInterval, percantage: Float?) {
+        let newCurrentTime = timeInterval >= 0 ? timeInterval : 0
+        playChronometer?.timerCurrentValue = newCurrentTime
+        currentTimePublisher.onNext(newCurrentTime)
         if !(playChronometer?.isPlaying ?? false) {
             self.currentGradientPercentage = percantage
         }
