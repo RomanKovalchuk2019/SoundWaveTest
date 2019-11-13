@@ -408,7 +408,10 @@ public class AudioVisualizationView: BaseNibView {
 	}
     
     public func changeTimer(timeInterval: TimeInterval, percantage: Float?) {
-        let newCurrentTime = timeInterval >= 0 ? timeInterval : 0
+        var newCurrentTime = timeInterval >= 0 ? timeInterval : 0
+        if newCurrentTime > self.duration ?? 0 {
+            newCurrentTime = self.duration ?? 0
+        }
         playChronometer.timerCurrentValue = newCurrentTime
         currentTimePublisher.onNext(newCurrentTime)
         if !playChronometer.isPlaying {
