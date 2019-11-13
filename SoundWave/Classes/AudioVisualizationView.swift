@@ -64,10 +64,10 @@ public class AudioVisualizationView: BaseNibView {
     private let currentTimePublisher = BehaviorSubject<TimeInterval>(value: TimeInterval(floatLiteral: 0))
     public var currectTimeObservable: Observable<TimeInterval> { return currentTimePublisher }
     
-	private var playChronometer: Chronometer?
+    private lazy var playChronometer: Chronometer = Chronometer(withTimeInterval: self.audioVisualizationTimeInterval)
     public var timerDidComplete: TimerDidCompleteClosure? {
         didSet {
-            playChronometer?.timerDidComplete = timerDidComplete
+            playChronometer.timerDidComplete = timerDidComplete
         }
     }
 
@@ -144,9 +144,16 @@ public class AudioVisualizationView: BaseNibView {
 		self.setNeedsDisplay()
 	}
     
+    public func resetWavesWithTimer() {
+        self.currentGradientPercentage = nil
+        self.playChronometer.timerCurrentValue = 0.0
+        self.playChronometer.stop()
+        self.setNeedsDisplay()
+    }
+    
     public func setCurrentGradientPercentage() {
-        guard let duration = self.duration,
-            let timerDuration = self.playChronometer?.timerCurrentValue else { return }
+        guard let duration = self.duration else { return }
+        let timerDuration = self.playChronometer.timerCurrentValue
         self.currentGradientPercentage = Float(timerDuration) / Float(duration)
         self.setNeedsDisplay()
     }
@@ -233,16 +240,16 @@ public class AudioVisualizationView: BaseNibView {
             return
 		}
 
-		if let currentChronometer = self.playChronometer {
-			currentChronometer.start() // resume current
-			return
-		}
+//		if let currentChronometer = self.playChronometer {
+//			currentChronometer.start() // resume current
+//			return
+//		}
 
-		self.playChronometer = Chronometer(withTimeInterval: self.audioVisualizationTimeInterval)
-		self.playChronometer?.start(shouldFire: false)
-        self.playChronometer?.timerDidComplete = self.timerDidComplete
+//		self.playChronometer = Chronometer(withTimeInterval: self.audioVisualizationTimeInterval)
+		self.playChronometer.start()
+//        self.playChronometer.timerDidComplete = self.timerDidComplete
 
-		self.playChronometer?.timerDidUpdate = { [weak self] timerDuration in
+		self.playChronometer.timerDidUpdate = { [weak self] timerDuration in
 			guard let this = self else {
 				return
 			}
@@ -258,16 +265,16 @@ public class AudioVisualizationView: BaseNibView {
     }
 
 	public func pause() {
-		guard let chronometer = self.playChronometer, chronometer.isPlaying else {
+		guard playChronometer.isPlaying else {
 			print("trying to pause audio visualization view when not playing")
             return
 		}
-		self.playChronometer?.pause()
+		self.playChronometer.pause()
 	}
 
 	public func stop() {
-		self.playChronometer?.stop()
-		self.playChronometer = nil
+		self.playChronometer.stop()
+//		self.playChronometer = nil
 
 		self.currentGradientPercentage = 1.0
 		self.setNeedsDisplay()
@@ -402,9 +409,9 @@ public class AudioVisualizationView: BaseNibView {
     
     public func changeTimer(timeInterval: TimeInterval, percantage: Float?) {
         let newCurrentTime = timeInterval >= 0 ? timeInterval : 0
-        playChronometer?.timerCurrentValue = newCurrentTime
+        playChronometer.timerCurrentValue = newCurrentTime
         currentTimePublisher.onNext(newCurrentTime)
-        if !(playChronometer?.isPlaying ?? false) {
+        if !playChronometer.isPlaying {
             self.currentGradientPercentage = percantage
         }
         self.setNeedsDisplay()
