@@ -413,6 +413,7 @@ public class AudioVisualizationView: BaseNibView {
         if newCurrentTime > self.duration ?? 0 {
             newCurrentTime = self.duration ?? 0
         }
+        timeChanged?(newCurrentTime)
         playChronometer.timerCurrentValue = newCurrentTime
         currentTimePublisher.onNext(newCurrentTime)
         if !playChronometer.isPlaying {
