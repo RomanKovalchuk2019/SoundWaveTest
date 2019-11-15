@@ -26,7 +26,7 @@ public final class Chronometer: NSObject {
     
     public func start(should fire: Bool = true) {
         self.timer = Timer(timeInterval: self.timeInterval, target: self, selector: #selector(Chronometer.timerDidTrigger), userInfo: nil, repeats: true)
-        RunLoop.current.add(self.timer!, forMode: .default)
+        RunLoop.current.add(self.timer!, forMode: .common)
         
         self.timer?.fire()
         self.isPlaying = true
