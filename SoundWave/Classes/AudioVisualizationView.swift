@@ -50,7 +50,8 @@ public class AudioVisualizationView: BaseNibView {
 	// The rest of the screen will be filled by `self.gradientStartColor` to display nicely.
 	// Do not specify any `gradientPercentage` for gradient calculating fitting size automatically.
     public var currentGradientPercentage: Float?
-
+    public var timeChanged: ((TimeInterval) -> ())?
+    
 	private var meteringLevelsArray: [Float] = []    // Mutating recording array (values are percentage: 0.0 to 1.0)
 	private var meteringLevelsClusteredArray: [Float] = [] // Generated read mode array (values are percentage: 0.0 to 1.0)
 
