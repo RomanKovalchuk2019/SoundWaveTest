@@ -9,6 +9,28 @@ import AVFoundation
 import UIKit
 import RxSwift
 
+public enum PanDirection: Int {
+    case up, down, left, right
+    public var isVertical: Bool { return [.up, .down].contains(self) }
+    public var isHorizontal: Bool { return !isVertical }
+}
+
+public extension UIPanGestureRecognizer {
+
+   var direction: PanDirection? {
+        let velocity = self.velocity(in: view)
+        let isVertical = abs(velocity.y) > abs(velocity.x)
+        switch (isVertical, velocity.x, velocity.y) {
+        case (true, _, let y) where y < 0: return .up
+        case (true, _, let y) where y > 0: return .down
+        case (false, let x, _) where x > 0: return .right
+        case (false, let x, _) where x < 0: return .left
+        default: return nil
+        }
+    }
+
+}
+
 public class AudioVisualizationView: BaseNibView {
 	public enum AudioVisualizationMode {
 		case read
@@ -102,24 +124,40 @@ public class AudioVisualizationView: BaseNibView {
     
 	override public init(frame: CGRect) {
 		super.init(frame: frame)
-        let gesture = UIPanGestureRecognizer(target: self, action: #selector(panGesture))
-        self.addGestureRecognizer(gesture)
+        setupGestureRecognizers()
 	}
+    
+    func setupGestureRecognizers() {
+        let gesture = UIPanGestureRecognizer(target: self, action: #selector(panGesture(_:)))
+        gesture.delegate = self
+        self.addGestureRecognizer(gesture)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapGestureHandler(_:)))
+        self.addGestureRecognizer(tap)
+    }
     
     @objc
     func panGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
-        guard gestureRecognizer.view != nil else { return }
-        if gestureRecognizer.state == .began || gestureRecognizer.state == .changed, let duration = duration {
+        guard gestureRecognizer.view != nil, let direction = gestureRecognizer.direction,
+            direction.isHorizontal else { return }
+        if gestureRecognizer.state == .changed, let duration = duration {
             let location = gestureRecognizer.location(in: self)
             let percantage = location.x / self.bounds.size.width
             self.changeTimer(timeInterval: duration * Double(percantage), percantage: Float(percantage))
         }
     }
+    
+    @objc
+    func tapGestureHandler(_ gestureRecognizer: UITapGestureRecognizer) {
+        guard gestureRecognizer.view != nil,
+            gestureRecognizer.state == .ended, let duration = duration else { return }
+        let location = gestureRecognizer.location(in: self)
+        let percantage = location.x / self.bounds.size.width
+        self.changeTimer(timeInterval: duration * Double(percantage), percantage: Float(percantage))
+    }
 
 	required public init?(coder aDecoder: NSCoder) {
 		super.init(coder: aDecoder)
-        let gesture = UIPanGestureRecognizer(target: self, action: #selector(panGesture))
-        self.addGestureRecognizer(gesture)
+        setupGestureRecognizers()
 	}
 
 	override public func draw(_ rect: CGRect) {
@@ -129,13 +167,6 @@ public class AudioVisualizationView: BaseNibView {
 			self.drawLevelBarsMaskAndGradient(inContext: context)
 		}
 	}
-    
-    override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let location = touches.first?.location(in: self), let duration = self.duration else { return }
-        
-        let percantage = location.x / self.bounds.size.width
-        self.changeTimer(timeInterval: duration * Double(percantage), percantage: Float(percantage))
-    }
 
 	public func reset() {
 		self.meteringLevels = nil
@@ -447,4 +478,11 @@ public class AudioVisualizationView: BaseNibView {
 	private func xPointForMeteringLevel(_ atIndex: Int) -> CGFloat {
 		return CGFloat(atIndex) * (self.meteringLevelBarWidth + self.meteringLevelBarInterItem)
 	}
+}
+
+extension AudioVisualizationView: UIGestureRecognizerDelegate {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                                  shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
 }
